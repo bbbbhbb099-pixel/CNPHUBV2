@@ -1,0 +1,289 @@
+-- Services
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+
+local Player = Players.LocalPlayer
+
+-- Xóa GUI cũ nếu đã tồn tại để tránh trùng lặp
+if CoreGui:FindFirstChild("CNPHubGUI") then
+    CoreGui:FindFirstChild("CNPHubGUI"):Destroy()
+end
+
+-- Khởi tạo ScreenGui
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "CNPHubGUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = CoreGui
+
+-- Danh sách dữ liệu 3 kịch bản
+local ScriptsData = {
+    {
+        Name = "YouTube Music Player",
+        Image = "rbxassetid://1111111111", -- Thay ID ảnh Roblox tại đây
+        Description = "Trình phát nhạc YouTube ngay trong game. Cho phép tìm kiếm và phát âm thanh trực tiếp từ YouTube.",
+        Code = function()
+            loadstring(game:HttpGet("https://scriptblox.com/raw/Universal-Script-YouTube-music-Player-110035"))()
+        end
+    },
+    {
+        Name = "Avatar Copier V2",
+        Image = "rbxassetid://2222222222", -- Thay ID ảnh Roblox tại đây
+        Description = "Sao chép, lưu trữ trang phục và kiểm tra vật phẩm (Item Inspector) của bất kỳ người chơi nào trong server.",
+        Code = function()
+            loadstring(game:HttpGet("https://scriptblox.com/raw/Universal-Script-Knight's-Avatar-Copier-and-Saver-V2-with-Item-Inspector-Free-226882"))()
+        end
+    },
+    {
+        Name = "Rob Catalog Avatar",
+        Image = "rbxassetid://3333333333", -- Thay ID ảnh Roblox tại đây
+        Description = "Kịch bản hỗ trợ tính năng đặc biệt dành riêng cho tựa game Catalog Avatar Creator.",
+        Code = function()
+            loadstring(game:HttpGet("https://scriptblox.com/raw/Universal-Script-Rob-Catalog-Avatar-Creator-245343"))()
+        end
+    }
+}
+
+local SelectedScript = ScriptsData[1]
+
+-- ==========================================
+-- 1. NÚT TRÒN MÀU XANH LÁ TRONG SUỐT (CNP)
+-- ==========================================
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "CNPToggle"
+ToggleButton.Size = UDim2.new(0, 55, 0, 55)
+ToggleButton.Position = UDim2.new(0.05, 0, 0.2, 0)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(46, 204, 113) -- Đã đổi sang màu xanh lá
+ToggleButton.BackgroundTransparency = 0.45 -- Độ trong suốt tương đương
+ToggleButton.Text = "CNP"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.TextSize = 16
+ToggleButton.Active = true
+ToggleButton.Draggable = true -- Cho phép kéo thả nút trên màn hình
+ToggleButton.Parent = ScreenGui
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(1, 0) -- Bo tròn 100%
+ToggleCorner.Parent = ToggleButton
+
+local ToggleStroke = Instance.new("UIStroke")
+ToggleStroke.Color = Color3.fromRGB(255, 255, 255)
+ToggleStroke.Thickness = 2
+ToggleStroke.Transparency = 0.3
+ToggleStroke.Parent = ToggleButton
+
+-- ==========================================
+-- 2. MENU CHÍNH (XANH LÁ NHẠT, TRONG SUỐT ~55%)
+-- ==========================================
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 0, 0, 0) -- Bắt đầu từ 0 để làm hiệu ứng mở
+MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+MainFrame.BackgroundColor3 = Color3.fromRGB(144, 238, 144) -- Xanh lá nhạt (Light Green)
+MainFrame.BackgroundTransparency = 0.45 -- Độ trong suốt 55%
+MainFrame.ClipsDescendants = true
+MainFrame.Visible = false
+MainFrame.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 14)
+MainCorner.Parent = MainFrame
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(255, 255, 255)
+MainStroke.Thickness = 1.5
+MainStroke.Transparency = 0.4
+MainStroke.Parent = MainFrame
+
+-- Thanh tiêu đề trên cùng
+local Header = Instance.new("TextLabel")
+Header.Size = UDim2.new(1, 0, 0, 35)
+Header.BackgroundColor3 = Color3.fromRGB(34, 139, 34)
+Header.BackgroundTransparency = 0.5
+Header.Text = "   CNP SCRIPT HUB"
+Header.TextColor3 = Color3.fromRGB(255, 255, 255)
+Header.Font = Enum.Font.GothamBold
+Header.TextSize = 15
+Header.TextXAlignment = Enum.TextXAlignment.Left
+Header.Parent = MainFrame
+
+-- ==========================================
+-- 3. PHÂN CHIA BỐ CỤC (TRÁI & PHẢI)
+-- ==========================================
+local Container = Instance.new("Frame")
+Container.Size = UDim2.new(1, -20, 1, -45)
+Container.Position = UDim2.new(0, 10, 0, 40)
+Container.BackgroundTransparency = 1
+Container.Parent = MainFrame
+
+-- KHU VỰC BÊN TRÁI (Danh sách kịch bản)
+local LeftPanel = Instance.new("ScrollingFrame")
+LeftPanel.Size = UDim2.new(0.35, -5, 1, 0)
+LeftPanel.BackgroundColor3 = Color3.fromRGB(20, 60, 20)
+LeftPanel.BackgroundTransparency = 0.5
+LeftPanel.BorderSizePixel = 0
+LeftPanel.ScrollBarThickness = 4
+LeftPanel.Parent = Container
+
+local LeftCorner = Instance.new("UICorner")
+LeftCorner.CornerRadius = UDim.new(0, 10)
+LeftCorner.Parent = LeftPanel
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Padding = UDim.new(0, 8)
+UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIListLayout.Parent = LeftPanel
+
+local UIPadding = Instance.new("UIPadding")
+UIPadding.PaddingTop = UDim.new(0, 8)
+UIPadding.Parent = LeftPanel
+
+-- KHU VỰC BÊN PHẢI (Chi tiết, Hình ảnh & Nút Execute)
+local RightPanel = Instance.new("Frame")
+RightPanel.Size = UDim2.new(0.65, -5, 1, 0)
+RightPanel.Position = UDim2.new(0.35, 10, 0, 0)
+RightPanel.BackgroundColor3 = Color3.fromRGB(20, 60, 20)
+RightPanel.BackgroundTransparency = 0.5
+RightPanel.Parent = Container
+
+local RightCorner = Instance.new("UICorner")
+RightCorner.CornerRadius = UDim.new(0, 10)
+RightCorner.Parent = RightPanel
+
+-- Ở trên: Nội dung & Tiêu đề kịch bản
+local ScriptTitle = Instance.new("TextLabel")
+ScriptTitle.Size = UDim2.new(1, -20, 0, 28)
+ScriptTitle.Position = UDim2.new(0, 10, 0, 8)
+ScriptTitle.BackgroundTransparency = 1
+ScriptTitle.Text = SelectedScript.Name
+ScriptTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+ScriptTitle.Font = Enum.Font.GothamBold
+ScriptTitle.TextSize = 16
+ScriptTitle.TextXAlignment = Enum.TextXAlignment.Left
+ScriptTitle.Parent = RightPanel
+
+local ScriptDesc = Instance.new("TextLabel")
+ScriptDesc.Size = UDim2.new(1, -20, 0, 45)
+ScriptDesc.Position = UDim2.new(0, 10, 0, 36)
+ScriptDesc.BackgroundTransparency = 1
+ScriptDesc.Text = SelectedScript.Description
+ScriptDesc.TextColor3 = Color3.fromRGB(230, 255, 230)
+ScriptDesc.Font = Enum.Font.Gotham
+ScriptDesc.TextSize = 12
+ScriptDesc.TextWrapped = true
+ScriptDesc.TextXAlignment = Enum.TextXAlignment.Left
+ScriptDesc.TextYAlignment = Enum.TextYAlignment.Top
+ScriptDesc.Parent = RightPanel
+
+-- Ở giữa: Ô lớn có hình ảnh
+local ScriptImage = Instance.new("ImageLabel")
+ScriptImage.Size = UDim2.new(1, -20, 0, 115)
+ScriptImage.Position = UDim2.new(0, 10, 0, 85)
+ScriptImage.BackgroundColor3 = Color3.fromRGB(15, 45, 15)
+ScriptImage.BackgroundTransparency = 0.3
+ScriptImage.Image = SelectedScript.Image
+ScriptImage.ScaleType = Enum.ScaleType.Crop
+ScriptImage.Parent = RightPanel
+
+local ImgCorner = Instance.new("UICorner")
+ImgCorner.CornerRadius = UDim.new(0, 8)
+ImgCorner.Parent = ScriptImage
+
+-- Ở dưới: Nút khởi động kịch bản bằng tiếng Anh
+local ExecuteBtn = Instance.new("TextButton")
+ExecuteBtn.Size = UDim2.new(1, -20, 0, 38)
+ExecuteBtn.Position = UDim2.new(0, 10, 1, -46)
+ExecuteBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+ExecuteBtn.Text = "Execute Script"
+ExecuteBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ExecuteBtn.Font = Enum.Font.GothamBold
+ExecuteBtn.TextSize = 15
+ExecuteBtn.Parent = RightPanel
+
+local ExecCorner = Instance.new("UICorner")
+ExecCorner.CornerRadius = UDim.new(0, 8)
+ExecCorner.Parent = ExecuteBtn
+
+-- ==========================================
+-- 4. TẠO NÚT DANH SÁCH & XỬ LÝ SỰ KIỆN
+-- ==========================================
+for i, data in ipairs(ScriptsData) do
+    local TabBtn = Instance.new("TextButton")
+    TabBtn.Size = UDim2.new(0.9, 0, 0, 38)
+    TabBtn.BackgroundColor3 = Color3.fromRGB(40, 110, 40)
+    TabBtn.BackgroundTransparency = 0.3
+    TabBtn.Text = data.Name
+    TabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TabBtn.Font = Enum.Font.GothamSemibold
+    TabBtn.TextSize = 13
+    TabBtn.TextWrapped = true
+    TabBtn.Parent = LeftPanel
+
+    local TabCorner = Instance.new("UICorner")
+    TabCorner.CornerRadius = UDim.new(0, 6)
+    TabCorner.Parent = TabBtn
+
+    TabBtn.MouseButton1Click:Connect(function()
+        SelectedScript = data
+        ScriptTitle.Text = data.Name
+        ScriptDesc.Text = data.Description
+        ScriptImage.Image = data.Image
+        
+        -- Hiệu ứng nhấn nhẹ trên tab
+        TweenService:Create(TabBtn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(60, 180, 75)}):Play()
+        task.wait(0.1)
+        TweenService:Create(TabBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(40, 110, 40)}):Play()
+    end)
+end
+
+-- Sự kiện bấm nút Execute Script
+ExecuteBtn.MouseButton1Click:Connect(function()
+    local origText = ExecuteBtn.Text
+    ExecuteBtn.Text = "Executing..."
+    TweenService:Create(ExecuteBtn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(39, 174, 96)}):Play()
+    
+    -- Chạy kịch bản được chọn
+    task.spawn(function()
+        pcall(SelectedScript.Code)
+    end)
+    
+    task.wait(0.8)
+    ExecuteBtn.Text = "Executed!"
+    task.wait(0.8)
+    ExecuteBtn.Text = origText
+    TweenService:Create(ExecuteBtn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(46, 204, 113)}):Play()
+end)
+
+-- ==========================================
+-- 5. HIỆU ỨNG ĐỘNG KHI BẤM NÚT TRÒN CNP
+-- ==========================================
+local IsOpen = false
+local TargetSize = UDim2.new(0, 500, 0, 310) -- Kích thước chuẩn của Menu chính
+
+ToggleButton.MouseButton1Click:Connect(function()
+    -- Hiệu ứng nảy (Pulse/Bounce) cho nút tròn CNP
+    local shrink = TweenService:Create(ToggleButton, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0, 46, 0, 46)})
+    local expand = TweenService:Create(ToggleButton, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 55, 0, 55)})
+    
+    shrink:Play()
+    shrink.Completed:Connect(function()
+        expand:Play()
+    end)
+
+    -- Hiệu ứng đóng/mở Menu chính
+    IsOpen = not IsOpen
+    if IsOpen then
+        MainFrame.Visible = true
+        TweenService:Create(MainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = TargetSize}):Play()
+    else
+        local closeTween = TweenService:Create(MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)})
+        closeTween:Play()
+        closeTween.Completed:Connect(function()
+            if not IsOpen then
+                MainFrame.Visible = false
+            end
+        end)
+    end
+end)
